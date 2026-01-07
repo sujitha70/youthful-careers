@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ApplyModal from "@/components/jobs/ApplyModal";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -72,6 +74,7 @@ const sampleJobs = [
 
 const JobDetails = () => {
   const { id } = useParams();
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const job = sampleJobs.find(j => j.id === id);
 
   if (!job) {
@@ -189,7 +192,11 @@ const JobDetails = () => {
             <div className="space-y-6">
               {/* Apply Card */}
               <div className="bg-card rounded-2xl border border-border p-6 sticky top-24">
-                <Button className="w-full mb-3" size="lg">
+                <Button 
+                  className="w-full mb-3" 
+                  size="lg"
+                  onClick={() => setIsApplyModalOpen(true)}
+                >
                   Apply Now
                 </Button>
                 <div className="flex gap-2">
@@ -216,6 +223,13 @@ const JobDetails = () => {
         </div>
       </main>
       <Footer />
+      
+      <ApplyModal
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+        jobTitle={job.title}
+        company={job.company}
+      />
     </div>
   );
 };
