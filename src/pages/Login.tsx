@@ -1,11 +1,45 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Briefcase, Mail, Lock, ArrowRight } from "lucide-react";
+import { Briefcase, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Welcome back!",
+      description: "You have successfully logged in.",
+    });
+    navigate("/dashboard");
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Panel - Form */}
@@ -28,7 +62,7 @@ const Login = () => {
             Sign in to continue your job search
           </p>
 
-          <form className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
                 Email address
@@ -40,6 +74,9 @@ const Login = () => {
                   type="email"
                   placeholder="you@example.com"
                   className="pl-11 h-12"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -55,6 +92,9 @@ const Login = () => {
                   type="password"
                   placeholder="Enter your password"
                   className="pl-11 h-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -71,9 +111,12 @@ const Login = () => {
               </Link>
             </div>
 
-            <Button type="submit" size="lg" className="w-full h-12">
+            <Button type="submit" size="lg" className="w-full h-12" disabled={loading}>
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
               Sign In
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
           </form>
 
