@@ -21,7 +21,7 @@ interface JobCardProps {
 
 const JobCard = ({ job }: JobCardProps) => {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 hover-lift group">
+    <Link to={`/jobs/${job.id}`} className="block bg-card border border-border rounded-xl p-6 hover-lift group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-4">
           {/* Company Logo */}
@@ -71,11 +71,9 @@ const JobCard = ({ job }: JobCardProps) => {
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">{job.postedAt}</span>
-        <Button size="sm" asChild>
-          <Link to={`/jobs/${job.id}`}>Apply Now</Link>
-        </Button>
+        <Button size="sm">Apply Now</Button>
       </div>
-    </div>
+    </Link>
   );
 };
 

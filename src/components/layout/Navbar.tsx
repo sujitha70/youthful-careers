@@ -1,11 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X } from "lucide-react";
+import { Briefcase, Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -19,7 +28,6 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
               <Briefcase className="w-5 h-5 text-primary-foreground" />
@@ -29,7 +37,6 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
@@ -44,17 +51,37 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/register">Get Started</Link>
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Sign In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/register">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2 text-foreground"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -63,7 +90,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
@@ -82,12 +108,25 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link to="/login">Sign In</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/register">Get Started</Link>
-                </Button>
+                {user ? (
+                  <>
+                    <Button variant="ghost" asChild className="justify-start">
+                      <Link to="/dashboard">Dashboard</Link>
+                    </Button>
+                    <Button variant="outline" onClick={() => signOut()}>
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" asChild className="justify-start">
+                      <Link to="/login">Sign In</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/register">Get Started</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
