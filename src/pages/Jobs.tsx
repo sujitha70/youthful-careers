@@ -1,77 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import JobCard, { Job } from "@/components/jobs/JobCard";
 import JobFilters from "@/components/jobs/JobFilters";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, Grid, List } from "lucide-react";
-
-// Sample job data
-const sampleJobs: Job[] = [
-  {
-    id: "1",
-    title: "Junior Software Developer",
-    company: "TechStart Inc.",
-    location: "San Francisco, CA",
-    type: "Full-time",
-    salary: "$55,000 - $70,000",
-    skills: ["JavaScript", "React", "Node.js", "Git"],
-    postedAt: "Posted 2 days ago",
-  },
-  {
-    id: "2",
-    title: "Marketing Coordinator",
-    company: "GrowthLabs",
-    location: "Remote",
-    type: "Full-time",
-    salary: "$45,000 - $55,000",
-    skills: ["Social Media", "Content Writing", "Analytics", "SEO"],
-    postedAt: "Posted 1 day ago",
-  },
-  {
-    id: "3",
-    title: "Data Analyst Intern",
-    company: "DataVision Co.",
-    location: "New York, NY",
-    type: "Internship",
-    salary: "$25/hour",
-    skills: ["Python", "SQL", "Excel", "Tableau"],
-    postedAt: "Posted 3 days ago",
-  },
-  {
-    id: "4",
-    title: "UI/UX Design Associate",
-    company: "DesignHub",
-    location: "Austin, TX",
-    type: "Full-time",
-    salary: "$50,000 - $65,000",
-    skills: ["Figma", "Adobe XD", "Prototyping", "User Research"],
-    postedAt: "Posted today",
-  },
-  {
-    id: "5",
-    title: "Business Development Trainee",
-    company: "SalesForce Pro",
-    location: "Chicago, IL",
-    type: "Full-time",
-    salary: "$48,000 + Commission",
-    skills: ["Communication", "CRM", "Negotiation", "MS Office"],
-    postedAt: "Posted 5 days ago",
-  },
-  {
-    id: "6",
-    title: "Content Writer",
-    company: "MediaMind",
-    location: "Remote",
-    type: "Part-time",
-    salary: "$20 - $30/hour",
-    skills: ["Copywriting", "SEO", "Research", "WordPress"],
-    postedAt: "Posted 1 week ago",
-  },
-];
+import { SlidersHorizontal, Grid, List, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Jobs = () => {
   const [showFilters, setShowFilters] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const formattedJobs: Job[] = (data || []).map((job) => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        type: job.type,
+        salary: job.salary || undefined,
+        skills: job.skills || [],
+        postedAt: `Posted ${formatTimeAgo(new Date(job.created_at))}`,
+      }));
+
+      setJobs(formattedJobs);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return "today";
+    if (diffInDays === 1) return "1 day ago";
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 14) return "1 week ago";
+    return `${Math.floor(diffInDays / 7)} weeks ago`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,7 +68,7 @@ const Jobs = () => {
               Find Entry-Level Jobs
             </h1>
             <p className="text-muted-foreground">
-              {sampleJobs.length} opportunities waiting for you
+              {jobs.length} opportunities waiting for you
             </p>
           </div>
 
@@ -124,17 +108,29 @@ const Jobs = () => {
 
               {/* Job Grid */}
               <div className="grid gap-4">
-                {sampleJobs.map((job) => (
-                  <JobCard key={job.id} job={job} />
-                ))}
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : jobs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No jobs available at the moment.</p>
+                  </div>
+                ) : (
+                  jobs.map((job) => (
+                    <JobCard key={job.id} job={job} />
+                  ))
+                )}
               </div>
 
               {/* Load More */}
-              <div className="text-center mt-10">
-                <Button variant="outline" size="lg">
-                  Load More Jobs
-                </Button>
-              </div>
+              {!loading && jobs.length > 0 && (
+                <div className="text-center mt-10">
+                  <Button variant="outline" size="lg">
+                    Load More Jobs
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
