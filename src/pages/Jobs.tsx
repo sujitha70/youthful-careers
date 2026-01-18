@@ -3,6 +3,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import JobCard, { Job } from "@/components/jobs/JobCard";
 import JobFilters from "@/components/jobs/JobFilters";
+import JobChatbot from "@/components/chat/JobChatbot";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Grid, List, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,6 +137,7 @@ const Jobs = () => {
         </div>
       </main>
       <Footer />
+      <JobChatbot />
     </div>
   );
 };
