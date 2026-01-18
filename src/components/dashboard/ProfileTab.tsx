@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, X, Plus } from "lucide-react";
+import AvatarUpload from "./AvatarUpload";
 
 interface Profile {
   id: string;
@@ -21,6 +22,7 @@ interface Profile {
   graduation_year: number | null;
   linkedin_url: string | null;
   portfolio_url: string | null;
+  avatar_url: string | null;
 }
 
 const ProfileTab = () => {
@@ -133,6 +135,15 @@ const ProfileTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex justify-center pb-4 border-b">
+          <AvatarUpload
+            userId={user?.id || ""}
+            currentAvatarUrl={profile.avatar_url}
+            fullName={profile.full_name}
+            onAvatarUpdate={(url) => setProfile({ ...profile, avatar_url: url })}
+          />
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
