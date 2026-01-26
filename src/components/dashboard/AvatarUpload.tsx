@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Loader2, User } from "lucide-react";
+import ImageCropModal from "./ImageCropModal";
 
 interface AvatarUploadProps {
   userId: string;
@@ -15,6 +16,8 @@ interface AvatarUploadProps {
 const AvatarUpload = ({ userId, currentAvatarUrl, fullName, onAvatarUpdate }: AvatarUploadProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getInitials = (name: string) => {
@@ -26,7 +29,7 @@ const AvatarUpload = ({ userId, currentAvatarUrl, fullName, onAvatarUpdate }: Av
       .slice(0, 2);
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -50,12 +53,23 @@ const AvatarUpload = ({ userId, currentAvatarUrl, fullName, onAvatarUpdate }: Av
       return;
     }
 
+    // Create object URL for the cropper
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImage(imageUrl);
+    setCropModalOpen(true);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
     setUploading(true);
 
     try {
       // Create unique file name
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${userId}/${Date.now()}.${fileExt}`;
+      const fileName = `${userId}/${Date.now()}.jpg`;
 
       // Delete old avatar if exists
       if (currentAvatarUrl) {
@@ -65,10 +79,13 @@ const AvatarUpload = ({ userId, currentAvatarUrl, fullName, onAvatarUpdate }: Av
         }
       }
 
-      // Upload new avatar
+      // Upload cropped avatar
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, croppedBlob, { 
+          upsert: true,
+          contentType: "image/jpeg"
+        });
 
       if (uploadError) throw uploadError;
 
@@ -100,47 +117,67 @@ const AvatarUpload = ({ userId, currentAvatarUrl, fullName, onAvatarUpdate }: Av
       });
     } finally {
       setUploading(false);
-      // Reset input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      // Clean up object URL
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage);
+        setSelectedImage(null);
       }
     }
   };
 
+  const handleModalClose = (open: boolean) => {
+    setCropModalOpen(open);
+    if (!open && selectedImage) {
+      URL.revokeObjectURL(selectedImage);
+      setSelectedImage(null);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative group">
-        <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
-          <AvatarImage src={currentAvatarUrl || undefined} alt={fullName} />
-          <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-            {fullName ? getInitials(fullName) : <User className="w-10 h-10" />}
-          </AvatarFallback>
-        </Avatar>
-        <Button
-          size="icon"
-          variant="secondary"
-          className="absolute bottom-0 right-0 rounded-full shadow-md h-8 w-8"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Camera className="w-4 h-4" />
-          )}
-        </Button>
+    <>
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative group">
+          <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
+            <AvatarImage src={currentAvatarUrl || undefined} alt={fullName} />
+            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+              {fullName ? getInitials(fullName) : <User className="w-10 h-10" />}
+            </AvatarFallback>
+          </Avatar>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute bottom-0 right-0 rounded-full shadow-md h-8 w-8"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <p className="text-sm text-muted-foreground">
+          Click the camera icon to upload a new photo
+        </p>
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileSelect}
-      />
-      <p className="text-sm text-muted-foreground">
-        Click the camera icon to upload a new photo
-      </p>
-    </div>
+
+      {selectedImage && (
+        <ImageCropModal
+          open={cropModalOpen}
+          onOpenChange={handleModalClose}
+          imageSrc={selectedImage}
+          onCropComplete={handleCropComplete}
+        />
+      )}
+    </>
   );
 };
 
