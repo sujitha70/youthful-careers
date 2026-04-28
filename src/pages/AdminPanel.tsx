@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Briefcase, Shield } from "lucide-react";
+import { Loader2, Users, Briefcase, Shield, FileText } from "lucide-react";
 import UsersManagementTab from "@/components/admin/UsersManagementTab";
 import JobsModerationTab from "@/components/admin/JobsModerationTab";
+import FresherApplicationsTab from "@/components/admin/FresherApplicationsTab";
 
 const AdminPanel = () => {
   const { user, loading: authLoading } = useAuth();
@@ -88,7 +89,7 @@ const AdminPanel = () => {
           </div>
 
           <Tabs defaultValue="users" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
               <TabsTrigger value="users" className="gap-2">
                 <Users className="w-4 h-4" />
                 Users & Employers
@@ -96,6 +97,10 @@ const AdminPanel = () => {
               <TabsTrigger value="jobs" className="gap-2">
                 <Briefcase className="w-4 h-4" />
                 Job Moderation
+              </TabsTrigger>
+              <TabsTrigger value="applications" className="gap-2">
+                <FileText className="w-4 h-4" />
+                Fresher Applications
               </TabsTrigger>
             </TabsList>
 
@@ -105,6 +110,10 @@ const AdminPanel = () => {
 
             <TabsContent value="jobs">
               <JobsModerationTab />
+            </TabsContent>
+
+            <TabsContent value="applications">
+              <FresherApplicationsTab />
             </TabsContent>
           </Tabs>
         </div>
