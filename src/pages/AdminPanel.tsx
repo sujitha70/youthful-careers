@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Briefcase, Shield } from "lucide-react";
+import { Loader2, Users, Briefcase, Shield, Plus } from "lucide-react";
 import UsersManagementTab from "@/components/admin/UsersManagementTab";
 import JobsModerationTab from "@/components/admin/JobsModerationTab";
+import JobPostingTab from "@/components/employer/JobPostingTab";
 
 const AdminPanel = () => {
   const { user, loading: authLoading } = useAuth();
