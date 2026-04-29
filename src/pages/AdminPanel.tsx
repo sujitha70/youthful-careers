@@ -89,7 +89,7 @@ const AdminPanel = () => {
           </div>
 
           <Tabs defaultValue="users" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
               <TabsTrigger value="users" className="gap-2">
                 <Users className="w-4 h-4" />
                 Users & Employers
@@ -97,6 +97,10 @@ const AdminPanel = () => {
               <TabsTrigger value="jobs" className="gap-2">
                 <Briefcase className="w-4 h-4" />
                 Job Moderation
+              </TabsTrigger>
+              <TabsTrigger value="post" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Post Job
               </TabsTrigger>
             </TabsList>
 
@@ -106,6 +110,10 @@ const AdminPanel = () => {
 
             <TabsContent value="jobs">
               <JobsModerationTab />
+            </TabsContent>
+
+            <TabsContent value="post">
+              <JobPostingTab />
             </TabsContent>
           </Tabs>
         </div>
