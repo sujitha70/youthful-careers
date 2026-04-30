@@ -311,9 +311,14 @@ const AdminApplicantsTab = () => {
                   </Select>
 
                   {app.resume && (
-                    <Button variant="outline" size="sm" onClick={() => downloadResume(app.resume!.file_path, app.resume!.file_name)}>
-                      <FileText className="w-4 h-4 mr-2" /> Download Resume
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full lg:w-[160px]">
+                      <Button variant="default" size="sm" onClick={() => previewResume(app.resume!.file_path, app.resume!.file_name)}>
+                        <Eye className="w-4 h-4 mr-2" /> Preview Resume
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => downloadResume(app.resume!.file_path, app.resume!.file_name)}>
+                        <FileText className="w-4 h-4 mr-2" /> Download
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -321,6 +326,33 @@ const AdminApplicantsTab = () => {
           </Card>
         ))
       )}
+
+      <Dialog open={!!previewUrl || previewLoading} onOpenChange={(open) => { if (!open) closePreview(); }}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
+          <DialogHeader>
+            <DialogTitle className="truncate pr-8">{previewName || "Resume Preview"}</DialogTitle>
+            <DialogDescription>Inline preview — signed link valid for 1 hour.</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 rounded-md border bg-muted/30 overflow-hidden">
+            {previewLoading || !previewUrl ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <iframe src={previewUrl} title={previewName} className="w-full h-full" />
+            )}
+          </div>
+          {previewUrl && (
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" /> Open in new tab
+                </a>
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
