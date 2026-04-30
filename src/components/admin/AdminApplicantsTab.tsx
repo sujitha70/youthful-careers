@@ -49,6 +49,9 @@ const AdminApplicantsTab = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string>("");
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     fetchAll();
