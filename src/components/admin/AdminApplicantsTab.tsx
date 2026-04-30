@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Users, Mail, Phone, FileText, ExternalLink, Calendar, Search, GraduationCap } from "lucide-react";
+import { Loader2, Users, Mail, Phone, FileText, ExternalLink, Calendar, Search, GraduationCap, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -48,6 +49,9 @@ const AdminApplicantsTab = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewName, setPreviewName] = useState<string>("");
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -131,6 +135,31 @@ const AdminApplicantsTab = () => {
       console.error(e);
       toast({ title: "Error", description: "Failed to download resume.", variant: "destructive" });
     }
+  };
+
+  const previewResume = async (filePath: string, fileName: string) => {
+    setPreviewLoading(true);
+    setPreviewName(fileName);
+    setPreviewUrl(null);
+    try {
+      const { data, error } = await supabase.storage
+        .from("resumes")
+        .createSignedUrl(filePath, 3600);
+      if (error) throw error;
+      setPreviewUrl(data.signedUrl);
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error", description: "Failed to load resume preview.", variant: "destructive" });
+      setPreviewUrl(null);
+      setPreviewName("");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewUrl(null);
+    setPreviewName("");
   };
 
   const filtered = applications.filter((a) => {
@@ -282,9 +311,14 @@ const AdminApplicantsTab = () => {
                   </Select>
 
                   {app.resume && (
-                    <Button variant="outline" size="sm" onClick={() => downloadResume(app.resume!.file_path, app.resume!.file_name)}>
-                      <FileText className="w-4 h-4 mr-2" /> Download Resume
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full lg:w-[160px]">
+                      <Button variant="default" size="sm" onClick={() => previewResume(app.resume!.file_path, app.resume!.file_name)}>
+                        <Eye className="w-4 h-4 mr-2" /> Preview Resume
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => downloadResume(app.resume!.file_path, app.resume!.file_name)}>
+                        <FileText className="w-4 h-4 mr-2" /> Download
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -292,6 +326,33 @@ const AdminApplicantsTab = () => {
           </Card>
         ))
       )}
+
+      <Dialog open={!!previewUrl || previewLoading} onOpenChange={(open) => { if (!open) closePreview(); }}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-4">
+          <DialogHeader>
+            <DialogTitle className="truncate pr-8">{previewName || "Resume Preview"}</DialogTitle>
+            <DialogDescription>Inline preview — signed link valid for 1 hour.</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 rounded-md border bg-muted/30 overflow-hidden">
+            {previewLoading || !previewUrl ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <iframe src={previewUrl} title={previewName} className="w-full h-full" />
+            )}
+          </div>
+          {previewUrl && (
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" /> Open in new tab
+                </a>
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
