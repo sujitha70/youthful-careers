@@ -137,6 +137,31 @@ const AdminApplicantsTab = () => {
     }
   };
 
+  const previewResume = async (filePath: string, fileName: string) => {
+    setPreviewLoading(true);
+    setPreviewName(fileName);
+    setPreviewUrl(null);
+    try {
+      const { data, error } = await supabase.storage
+        .from("resumes")
+        .createSignedUrl(filePath, 3600);
+      if (error) throw error;
+      setPreviewUrl(data.signedUrl);
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error", description: "Failed to load resume preview.", variant: "destructive" });
+      setPreviewUrl(null);
+      setPreviewName("");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewUrl(null);
+    setPreviewName("");
+  };
+
   const filtered = applications.filter((a) => {
     if (statusFilter !== "all" && a.status !== statusFilter) return false;
     if (search) {
